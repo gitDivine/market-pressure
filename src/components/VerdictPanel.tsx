@@ -22,6 +22,7 @@ interface Props {
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
+  selectedTimeframe?: Timeframe;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ const DIMENSION_LABELS = [
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function VerdictPanel({ data, loading, error, onRetry }: Props) {
+export default function VerdictPanel({ data, loading, error, onRetry, selectedTimeframe }: Props) {
   // ── Error state ─────────────────────────────────────────────────────────
   if (error) {
     return (
@@ -133,7 +134,6 @@ export default function VerdictPanel({ data, loading, error, onRetry }: Props) {
       <div className="mb-4 space-y-2 sm:mb-5">
         {DIMENSION_LABELS.map((dim, i) => {
           const score = data.dimensions[dim.key]; // -100 to +100
-          const pct = (score + 100) / 2; // 0-100 for positioning
           const isPositive = score > 5;
           const isNegative = score < -5;
           const barColor = isPositive
@@ -180,10 +180,27 @@ export default function VerdictPanel({ data, loading, error, onRetry }: Props) {
         })}
       </div>
 
-      {/* ── 3. Per-Timeframe Grid ──────────────────────────────────────── */}
+      {/* ── 3. Selected TF Breakdown ────────────────────────────────── */}
+      {selectedTimeframe && (() => {
+        const selectedTf = data.timeframes.find((t) => t.timeframe === selectedTimeframe);
+        if (!selectedTf) return null;
+        return (
+          <div className="mb-4 rounded-xl border border-accent/30 bg-accent/5 p-3 sm:mb-5 sm:p-4">
+            <p className="mb-2 text-xs font-semibold text-accent">{TF_LABELS[selectedTimeframe]} Breakdown</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <MiniDimCard label="Structure" value={selectedTf.structure.structure} color={selectedTf.structure.structure === "uptrend" ? "green" : selectedTf.structure.structure === "downtrend" ? "red" : "yellow"} detail={selectedTf.structure.description} />
+              <MiniDimCard label="Trend" value={selectedTf.trend.trend} color={selectedTf.trend.trend === "bullish" ? "green" : selectedTf.trend.trend === "bearish" ? "red" : "yellow"} detail={selectedTf.trend.description} />
+              <MiniDimCard label="Pressure" value={`${selectedTf.pressure.buyPressure}% buy`} color={selectedTf.pressure.buyPressure > 55 ? "green" : selectedTf.pressure.buyPressure < 45 ? "red" : "yellow"} detail={`RSI ${selectedTf.pressure.rsi} · MFI ${selectedTf.pressure.mfi}`} />
+              <MiniDimCard label="Shift" value={selectedTf.shift.detected ? selectedTf.shift.severity : "aligned"} color={selectedTf.shift.severity === "alert" ? "red" : selectedTf.shift.severity === "warning" ? "yellow" : "green"} detail={selectedTf.shift.description} />
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── 4. Per-Timeframe Grid ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-7">
         {data.timeframes.map((tf, i) => (
-          <TimeframeCard key={tf.timeframe} tf={tf} index={i} />
+          <TimeframeCard key={tf.timeframe} tf={tf} index={i} highlighted={tf.timeframe === selectedTimeframe} />
         ))}
       </div>
 
@@ -247,15 +264,16 @@ export default function VerdictPanel({ data, loading, error, onRetry }: Props) {
 
 // ─── Timeframe Card ─────────────────────────────────────────────────────────
 
-function TimeframeCard({ tf, index }: { tf: TimeframeAnalysis; index: number }) {
+function TimeframeCard({ tf, index, highlighted }: { tf: TimeframeAnalysis; index: number; highlighted?: boolean }) {
   const structureDir = tf.structure.structure;
   const trendDir = tf.trend.trend;
   const buyPct = tf.pressure.buyPressure;
   const hasShift = tf.shift.severity !== "none";
 
-  // Determine card border color from structure
-  const cardBorder =
-    structureDir === "uptrend"
+  // Determine card border color — highlight selected TF with accent ring
+  const cardBorder = highlighted
+    ? "border-accent ring-1 ring-accent/30 bg-accent/5"
+    : structureDir === "uptrend"
       ? "border-green/20 bg-green-glow"
       : structureDir === "downtrend"
         ? "border-red/20 bg-red-glow"
@@ -344,4 +362,21 @@ function TrendIcon({ trend }: { trend: "bullish" | "bearish" | "neutral" }) {
     default:
       return <Minus className="h-3 w-3 text-yellow" />;
   }
+}
+
+// ─── Mini Dimension Card (for selected TF breakdown) ────────────────────────
+
+function MiniDimCard({ label, value, color, detail }: { label: string; value: string; color: "green" | "red" | "yellow"; detail: string }) {
+  const colors = {
+    green: "border-green/20 bg-green-glow text-green",
+    red: "border-red/20 bg-red-glow text-red",
+    yellow: "border-yellow/20 bg-yellow/5 text-yellow",
+  };
+  return (
+    <div className={cn("rounded-lg border p-2", colors[color])}>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</p>
+      <p className="mt-0.5 text-xs font-bold capitalize">{value}</p>
+      <p className="mt-0.5 text-[10px] leading-tight text-muted line-clamp-2">{detail}</p>
+    </div>
+  );
 }

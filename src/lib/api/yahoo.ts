@@ -95,6 +95,17 @@ const FOREX_SYMBOLS = [
   "ZARJPY=X", "MXNJPY=X", "TRYJPY=X", "NOKJPY=X", "SEKJPY=X", "NOKSEK=X",
 ];
 
+// Metals & commodities — Yahoo uses futures symbols
+const COMMODITY_SYMBOLS = [
+  { symbol: "GC=F", name: "XAU/USD (Gold)", base: "XAU", quote: "USD" },
+  { symbol: "SI=F", name: "XAG/USD (Silver)", base: "XAG", quote: "USD" },
+  { symbol: "PL=F", name: "XPT/USD (Platinum)", base: "XPT", quote: "USD" },
+  { symbol: "CL=F", name: "WTI Crude Oil", base: "OIL", quote: "USD" },
+  { symbol: "BZ=F", name: "Brent Crude Oil", base: "BRENT", quote: "USD" },
+  { symbol: "NG=F", name: "Natural Gas", base: "NATGAS", quote: "USD" },
+  { symbol: "HG=F", name: "Copper", base: "COPPER", quote: "USD" },
+];
+
 const INDEX_SYMBOLS = [
   { symbol: "^GSPC", name: "S&P 500", base: "SPX" },
   { symbol: "^DJI", name: "Dow Jones", base: "DJI" },
@@ -139,6 +150,25 @@ export async function getForexPairs(): Promise<PairInfo[]> {
       change24h: Math.round(change * 100) / 100,
     });
   }
+
+  // Add metals & commodities (listed under forex since traders expect them there)
+  const commoditySymbols = COMMODITY_SYMBOLS.map((c) => c.symbol);
+  const commodityQuotes = await batchChartQuotes(commoditySymbols, 5, 200);
+  for (const c of COMMODITY_SYMBOLS) {
+    const q = commodityQuotes.get(c.symbol);
+    if (!q) continue;
+    const change = q.prevClose > 0 ? ((q.price - q.prevClose) / q.prevClose) * 100 : 0;
+    results.push({
+      symbol: c.symbol,
+      name: c.name,
+      base: c.base,
+      quote: c.quote,
+      class: "forex",
+      price: q.price,
+      change24h: Math.round(change * 100) / 100,
+    });
+  }
+
   return results;
 }
 

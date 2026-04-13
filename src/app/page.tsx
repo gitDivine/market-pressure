@@ -176,7 +176,7 @@ export default function Home() {
           >
             <div className="space-y-4 lg:col-span-2 lg:space-y-5">
               <PressureGauge data={pressure} loading={loading.pressure} error={errors.pressure} onRetry={() => fetchPressure(selectedPair, timeframe)} />
-              <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair)} />
+              <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair)} selectedTimeframe={timeframe} />
               <AnalysisNotes
                 pair={selectedPair.name}
                 pressure={pressure}
