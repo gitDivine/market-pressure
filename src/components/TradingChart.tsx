@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, memo } from "react";
+import { useEffect, useRef, useState, memo, useCallback } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import type { PairInfo, Timeframe } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface Props {
   pair: PairInfo;
@@ -65,6 +67,27 @@ function getTradingViewSymbol(pair: PairInfo): string {
 function TradingChart({ pair, timeframe }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<HTMLDivElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev);
+  }, []);
+
+  // Close fullscreen on Escape
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    // Lock body scroll
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -108,7 +131,7 @@ function TradingChart({ pair, timeframe }: Props) {
       locale: "en",
       backgroundColor: "rgba(10, 11, 15, 1)",
       gridColor: "rgba(30, 32, 48, 0.6)",
-      hide_top_toolbar: true,
+      hide_top_toolbar: false,
       hide_legend: false,
       allow_symbol_change: false,
       save_image: false,
@@ -131,13 +154,31 @@ function TradingChart({ pair, timeframe }: Props) {
   }, [pair, timeframe]);
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center border-b border-border px-4 py-2.5">
+    <div
+      ref={wrapperRef}
+      className={cn(
+        "overflow-hidden bg-card",
+        isFullscreen
+          ? "fixed inset-0 z-[100] flex flex-col"
+          : "rounded-2xl border border-border"
+      )}
+    >
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <h3 className="text-sm font-medium text-muted">Chart — {pair.name}</h3>
+        <button
+          onClick={toggleFullscreen}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-card-hover active:scale-95"
+          aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+        >
+          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </button>
       </div>
       <div
         ref={containerRef}
-        className="h-[350px] sm:h-[420px] lg:h-[480px] w-full"
+        className={cn(
+          "w-full",
+          isFullscreen ? "flex-1" : "h-[350px] sm:h-[420px] lg:h-[480px]"
+        )}
       />
     </div>
   );

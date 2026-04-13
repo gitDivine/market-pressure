@@ -386,7 +386,7 @@ function MiniDimCard({ label, value, color, detail }: { label: string; value: st
     <div className={cn("rounded-lg border p-2", colors[color])}>
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</p>
       <p className="mt-0.5 text-xs font-bold capitalize">{value}</p>
-      <p className="mt-0.5 text-[10px] leading-tight text-muted line-clamp-2">{detail}</p>
+      <p className="mt-0.5 text-[10px] leading-relaxed text-muted">{detail}</p>
     </div>
   );
 }
