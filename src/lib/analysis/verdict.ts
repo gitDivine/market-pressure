@@ -33,14 +33,16 @@ export interface VerdictResult {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+// HTF-dominant weighting: 1D+1W = 0.60, 4H = 0.20, all LTFs = 0.20
+// This ensures lower timeframe noise cannot overshadow higher timeframe structure
 const TIMEFRAME_WEIGHTS: Record<Timeframe, number> = {
-  "1m": 0.03,
-  "5m": 0.05,
-  "15m": 0.08,
-  "1h": 0.14,
+  "1m": 0.02,
+  "5m": 0.03,
+  "15m": 0.05,
+  "1h": 0.10,
   "4h": 0.20,
-  "1d": 0.27,
-  "1w": 0.23,
+  "1d": 0.32,
+  "1w": 0.28,
 };
 
 const DIMENSION_WEIGHTS = {
@@ -148,29 +150,34 @@ export function calculateVerdict(
   const sentiment = clamp(sentimentScore, -100, 100);
 
   // ── 2. Structure is king override ───────────────────────────────────────
-  // If 1D and 1W both show downtrend, apply bearish gravity.
-  // If both show uptrend, apply bullish gravity.
+  // HTF structure should anchor the verdict. Works with 1D alone or both 1D+1W.
+  // Stronger override when both agree, moderate when only 1D has a clear signal.
 
   const htfStructures = timeframeAnalyses.filter((a) =>
     HIGHER_TFS.includes(a.timeframe)
   );
 
   let htfOverride = 0;
-  if (htfStructures.length >= 2) {
-    const allDown = htfStructures.every((a) => a.structure.structure === "downtrend");
-    const allUp = htfStructures.every((a) => a.structure.structure === "uptrend");
+  if (htfStructures.length > 0) {
+    const downtrends = htfStructures.filter((a) => a.structure.structure === "downtrend");
+    const uptrends = htfStructures.filter((a) => a.structure.structure === "uptrend");
 
-    if (allDown) {
-      // Average strength of higher TF downtrends — pull final score toward bearish
-      const avgStrength =
-        htfStructures.reduce((s, a) => s + a.structure.strength, 0) /
-        htfStructures.length;
-      htfOverride = -(avgStrength * 0.3); // up to -30 bias
-    } else if (allUp) {
-      const avgStrength =
-        htfStructures.reduce((s, a) => s + a.structure.strength, 0) /
-        htfStructures.length;
-      htfOverride = avgStrength * 0.3;
+    if (downtrends.length === htfStructures.length) {
+      // All HTFs bearish — strong override
+      const avgStrength = downtrends.reduce((s, a) => s + a.structure.strength, 0) / downtrends.length;
+      htfOverride = -(avgStrength * 0.4); // up to -40 bias
+    } else if (uptrends.length === htfStructures.length) {
+      // All HTFs bullish — strong override
+      const avgStrength = uptrends.reduce((s, a) => s + a.structure.strength, 0) / uptrends.length;
+      htfOverride = avgStrength * 0.4;
+    } else if (downtrends.length > 0 && uptrends.length === 0) {
+      // At least one HTF bearish, none bullish (others may be ranging)
+      const avgStrength = downtrends.reduce((s, a) => s + a.structure.strength, 0) / downtrends.length;
+      htfOverride = -(avgStrength * 0.25);
+    } else if (uptrends.length > 0 && downtrends.length === 0) {
+      // At least one HTF bullish, none bearish
+      const avgStrength = uptrends.reduce((s, a) => s + a.structure.strength, 0) / uptrends.length;
+      htfOverride = avgStrength * 0.25;
     }
   }
 
