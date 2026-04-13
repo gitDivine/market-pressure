@@ -1,35 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBinanceKlines, getBinanceOrderBook } from "@/lib/api/binance";
+import { getCoinGeckoCandles, syntheticOrderBookImbalance } from "@/lib/api/coingecko";
 import { calculatePressure } from "@/lib/analysis/pressure";
 import { calculateConfluence } from "@/lib/analysis/confluence";
 import type { Timeframe } from "@/lib/types";
 
 const ALL_TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
-
-const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
+const SYMBOL_RE = /^[a-z0-9-]{1,60}$/;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const symbol = (searchParams.get("symbol") || "").toUpperCase();
+  const symbol = (searchParams.get("symbol") || "").toLowerCase();
 
   if (!symbol || !SYMBOL_RE.test(symbol)) {
     return NextResponse.json({ error: "Invalid symbol" }, { status: 400 });
   }
 
   try {
-    // Fetch order book once
-    const orderBook = await getBinanceOrderBook(symbol);
-
     // Fetch all timeframes in parallel
     const klinesResults = await Promise.allSettled(
-      ALL_TIMEFRAMES.map((tf) => getBinanceKlines(symbol, tf, 100))
+      ALL_TIMEFRAMES.map((tf) => getCoinGeckoCandles(symbol, tf))
     );
 
     const timeframePressures = ALL_TIMEFRAMES
       .map((tf, i) => {
         const result = klinesResults[i];
         if (result.status === "rejected") return null;
-        const pressure = calculatePressure(result.value, orderBook.imbalance);
+        const candles = result.value;
+        const imbalance = syntheticOrderBookImbalance(candles);
+        const pressure = calculatePressure(candles, imbalance);
         return { timeframe: tf, pressure };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);

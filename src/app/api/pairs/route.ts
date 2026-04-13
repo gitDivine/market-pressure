@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getBinancePairs } from "@/lib/api/binance";
+import { getCoinGeckoPairs } from "@/lib/api/coingecko";
 
 export async function GET() {
   try {
-    const pairs = await getBinancePairs();
+    const pairs = await getCoinGeckoPairs();
     return NextResponse.json({ pairs });
   } catch (error) {
     console.error("Failed to fetch pairs:", error);

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBinanceKlines, getBinanceOrderBook } from "@/lib/api/binance";
+import { getCoinGeckoCandles, syntheticOrderBookImbalance } from "@/lib/api/coingecko";
 import { calculatePressure } from "@/lib/analysis/pressure";
 import type { Timeframe } from "@/lib/types";
 
 const VALID_TFS = new Set(["1m", "5m", "15m", "1h", "4h", "1d", "1w"]);
-const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
+const SYMBOL_RE = /^[a-z0-9-]{1,60}$/;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const symbol = (searchParams.get("symbol") || "").toUpperCase();
+  const symbol = (searchParams.get("symbol") || "").toLowerCase();
   const tfParam = searchParams.get("timeframe") || "1h";
   const timeframe = (VALID_TFS.has(tfParam) ? tfParam : "1h") as Timeframe;
 
@@ -17,12 +17,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [candles, orderBook] = await Promise.all([
-      getBinanceKlines(symbol, timeframe),
-      getBinanceOrderBook(symbol),
-    ]);
-
-    const pressure = calculatePressure(candles, orderBook.imbalance);
+    const candles = await getCoinGeckoCandles(symbol, timeframe);
+    const imbalance = syntheticOrderBookImbalance(candles);
+    const pressure = calculatePressure(candles, imbalance);
 
     return NextResponse.json({ pressure, symbol, timeframe });
   } catch (error) {
