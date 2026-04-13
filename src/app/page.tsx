@@ -60,7 +60,7 @@ export default function Home() {
     setLoading((l) => ({ ...l, confluence: true }));
     setErrors((e) => ({ ...e, confluence: false }));
     try {
-      const res = await fetch(`/api/confluence?symbol=${encodeURIComponent(pair.symbol)}&class=${pair.class}`);
+      const res = await fetch(`/api/confluence?symbol=${encodeURIComponent(pair.symbol)}&class=${pair.class}&base=${encodeURIComponent(pair.base)}`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       if (data.confluence) setConfluence(data.confluence);
@@ -70,12 +70,12 @@ export default function Home() {
     setLoading((l) => ({ ...l, confluence: false }));
   }, []);
 
-  const fetchNews = useCallback(async (pair: PairInfo) => {
+  const fetchNews = useCallback(async (pair: PairInfo, tf: Timeframe) => {
     setLoading((l) => ({ ...l, news: true }));
     setErrors((e) => ({ ...e, news: false }));
     try {
       const category = pair.class === "crypto" ? "crypto" : pair.class === "forex" ? "forex" : "stock market";
-      const res = await fetch(`/api/news?asset=${pair.base}&query=${pair.base} ${category} price`);
+      const res = await fetch(`/api/news?asset=${pair.base}&query=${pair.base} ${category} price&timeframe=${tf}`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       setNews(data.news || []);
@@ -90,21 +90,23 @@ export default function Home() {
     if (!selectedPair) return;
     fetchPressure(selectedPair, timeframe);
     fetchConfluence(selectedPair);
-    fetchNews(selectedPair);
+    fetchNews(selectedPair, timeframe);
     setLastUpdate(new Date());
   }, [selectedPair, timeframe, fetchPressure, fetchConfluence, fetchNews]);
 
+  // Refetch pressure + news when pair or timeframe changes
   useEffect(() => {
     if (!selectedPair) return;
     fetchPressure(selectedPair, timeframe);
-  }, [selectedPair, timeframe, fetchPressure]);
+    fetchNews(selectedPair, timeframe);
+  }, [selectedPair, timeframe, fetchPressure, fetchNews]);
 
+  // Refetch confluence when pair changes (confluence scans all TFs already)
   useEffect(() => {
     if (!selectedPair) return;
     fetchConfluence(selectedPair);
-    fetchNews(selectedPair);
     setLastUpdate(new Date());
-  }, [selectedPair, fetchConfluence, fetchNews]);
+  }, [selectedPair, fetchConfluence]);
 
   useEffect(() => {
     if (!selectedPair) return;
@@ -185,7 +187,7 @@ export default function Home() {
 
             <div>
               <div className="lg:sticky lg:top-20">
-                <NewsPanel news={news} sentiment={newsSentiment} loading={loading.news} error={errors.news} onRetry={() => fetchNews(selectedPair)} />
+                <NewsPanel news={news} sentiment={newsSentiment} loading={loading.news} error={errors.news} onRetry={() => fetchNews(selectedPair, timeframe)} />
               </div>
             </div>
           </motion.div>

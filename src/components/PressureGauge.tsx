@@ -17,7 +17,7 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-red/20 bg-red-glow p-8 text-center">
         <p className="text-sm font-medium text-red">Failed to load pressure data</p>
-        <p className="text-xs text-muted">Binance API may be temporarily unavailable.</p>
+        <p className="text-xs text-muted">Data source may be temporarily unavailable or rate-limited.</p>
         {onRetry && (
           <button onClick={onRetry} className="mt-1 min-h-[44px] rounded-lg bg-card px-5 py-2 text-sm font-medium transition-colors hover:bg-card-hover active:scale-95">
             Retry

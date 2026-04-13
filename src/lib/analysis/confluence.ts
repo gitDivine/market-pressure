@@ -97,8 +97,10 @@ function detectDivergence(
   };
 }
 
+// newsSentiment: -100 to 100 (from news API), 0 = neutral/no news
 export function calculateConfluence(
-  timeframePressures: { timeframe: Timeframe; pressure: PressureData }[]
+  timeframePressures: { timeframe: Timeframe; pressure: PressureData }[],
+  newsSentiment = 0
 ): ConfluenceResult {
   if (timeframePressures.length === 0) {
     return {
@@ -120,12 +122,10 @@ export function calculateConfluence(
   const timeframes = timeframePressures.map(({ timeframe, pressure }) => {
     let weight = BASE_WEIGHTS[timeframe] || 0.1;
 
-    // Apply divergence weight adjustment to lower TFs
     if (divergence.detected && LOWER_TFS.includes(timeframe)) {
       weight *= divergence.weightAdjustment;
     }
 
-    // Staleness penalty: if HTF trend is weak (close to neutral), reduce its weight
     if (HIGHER_TFS.includes(timeframe) && Math.abs(pressure.buyPressure - 50) < 10) {
       weight *= 0.7;
     }
@@ -141,23 +141,30 @@ export function calculateConfluence(
     return { timeframe, trend, pressure, weight: Math.round(weight * 100) / 100 };
   });
 
+  // Factor in news sentiment (weight: 0.15 of total signal)
+  // newsSentiment is -100..100, normalize to -1..1
+  const NEWS_WEIGHT = 0.15;
+  if (newsSentiment !== 0) {
+    const newsScore = newsSentiment / 100; // -1 to 1
+    weightedScore += newsScore * NEWS_WEIGHT;
+    totalWeight += NEWS_WEIGHT;
+  }
+
   const normalizedScore = totalWeight > 0 ? weightedScore / totalWeight : 0;
 
-  // Determine overall trend
   let overallTrend: ConfluenceResult["overallTrend"] = "neutral";
   if (normalizedScore > 0.3) overallTrend = "strong_bullish";
   else if (normalizedScore > 0.1) overallTrend = "bullish";
   else if (normalizedScore < -0.3) overallTrend = "strong_bearish";
   else if (normalizedScore < -0.1) overallTrend = "bearish";
 
-  // Confidence = alignment × strength
   const total = timeframePressures.length;
   const maxAlignment = Math.max(bullishCount, bearishCount);
   const alignment = total > 0 ? maxAlignment / total : 0;
   const rawConfidence = alignment * Math.abs(normalizedScore) * 150;
   const confidence = Math.min(95, Math.round(rawConfidence));
 
-  const summary = generateSummary(overallTrend, confidence, bullishCount, bearishCount, total, divergence);
+  const summary = generateSummary(overallTrend, confidence, bullishCount, bearishCount, total, divergence, newsSentiment);
 
   return {
     overallTrend,
@@ -173,7 +180,8 @@ function generateSummary(
   bullish: number,
   bearish: number,
   total: number,
-  divergence: DivergenceInfo
+  divergence: DivergenceInfo,
+  newsSentiment = 0
 ): string {
   const trendLabels = {
     strong_bullish: "Strong Bullish",
@@ -197,6 +205,15 @@ function generateSummary(
     summary += "Moderate confluence — some conflicting signals on lower timeframes.";
   } else {
     summary += "Low confluence — trend is weak and may reverse.";
+  }
+
+  // News sentiment note
+  if (newsSentiment > 30) {
+    summary += `\n\n📰 News sentiment is bullish (+${newsSentiment}%) — media coverage supports the trend.`;
+  } else if (newsSentiment < -30) {
+    summary += `\n\n📰 News sentiment is bearish (${newsSentiment}%) — negative media pressure detected.`;
+  } else if (newsSentiment !== 0) {
+    summary += `\n\n📰 News sentiment is mixed (${newsSentiment > 0 ? "+" : ""}${newsSentiment}%) — no strong media bias.`;
   }
 
   summary += "\n\n⚠️ Not financial advice. Always do your own research.";

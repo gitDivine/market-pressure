@@ -74,7 +74,7 @@ export default function NewsPanel({ news, sentiment, loading, error, onRetry }: 
       {/* News list */}
       <div className="max-h-[60vh] space-y-1 overflow-y-auto overscroll-contain lg:max-h-96">
         {news.length === 0 ? (
-          <p className="py-6 text-center text-xs text-muted">No news available</p>
+          <p className="py-6 text-center text-xs text-muted">No news found for the selected timeframe</p>
         ) : (
           news.map((item, i) => (
             <motion.a
