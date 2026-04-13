@@ -75,7 +75,7 @@ export default function Home() {
     setErrors((e) => ({ ...e, news: false }));
     try {
       const category = pair.class === "crypto" ? "crypto" : pair.class === "forex" ? "forex" : "stock market";
-      const res = await fetch(`/api/news?asset=${pair.base}&query=${pair.base} ${category} price&timeframe=${tf}`);
+      const res = await fetch(`/api/news?asset=${pair.base}&query=${pair.base} ${category} price&timeframe=${tf}&class=${pair.class}`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       setNews(data.news || []);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCoinGeckoCandles, syntheticOrderBookImbalance } from "@/lib/api/coingecko";
 import { getYahooCandles, syntheticImbalance } from "@/lib/api/yahoo";
 import { getCryptoNews, getGoogleNews } from "@/lib/api/news";
+import { getSocialSentiment } from "@/lib/api/social";
 import { calculatePressure } from "@/lib/analysis/pressure";
 import { calculateConfluence } from "@/lib/analysis/confluence";
 import type { Timeframe, AssetClass, PressureData } from "@/lib/types";
@@ -19,11 +20,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch news in background while we get candles
+    // Fetch news + social in background while we get candles
     const newsPromise = Promise.all([
       getCryptoNews(base).catch(() => []),
       getGoogleNews(base + " price").catch(() => []),
     ]);
+    const socialPromise = getSocialSentiment(base, assetClass).catch(() => ({ overall: 0, posts: [], sources: [] }));
 
     // For crypto (CoinGecko): fetch sequentially to avoid rate limits
     // For Yahoo: can parallelize since batching already handles rate limits
@@ -56,21 +58,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get news sentiment
-    const [cryptoNews, googleNews] = await newsPromise;
+    // Get news + social sentiment
+    const [[cryptoNews, googleNews], social] = await Promise.all([newsPromise, socialPromise]);
     const allNews = [...cryptoNews, ...googleNews];
-    let sentimentScore = 0;
+    let newsScore = 0;
     for (const n of allNews) {
-      if (n.sentiment === "positive") sentimentScore++;
-      else if (n.sentiment === "negative") sentimentScore--;
+      if (n.sentiment === "positive") newsScore++;
+      else if (n.sentiment === "negative") newsScore--;
     }
-    const newsSentiment = allNews.length > 0
-      ? Math.round((sentimentScore / allNews.length) * 100)
+    const rawNewsSentiment = allNews.length > 0
+      ? Math.round((newsScore / allNews.length) * 100)
       : 0;
 
-    const confluence = calculateConfluence(timeframePressures, newsSentiment);
+    // Combined sentiment: 50% news, 50% social (when available)
+    let combinedSentiment = rawNewsSentiment;
+    if (social.overall !== 0 && rawNewsSentiment !== 0) {
+      combinedSentiment = Math.round(rawNewsSentiment * 0.5 + social.overall * 0.5);
+    } else if (social.overall !== 0) {
+      combinedSentiment = social.overall;
+    }
 
-    return NextResponse.json({ confluence, symbol, newsSentiment });
+    const confluence = calculateConfluence(timeframePressures, combinedSentiment);
+
+    return NextResponse.json({ confluence, symbol, newsSentiment: combinedSentiment, socialSentiment: social });
   } catch (error) {
     console.error(`Confluence calc failed for ${symbol}:`, error);
     return NextResponse.json({ error: "Failed to calculate confluence" }, { status: 500 });
