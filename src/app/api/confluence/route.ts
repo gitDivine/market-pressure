@@ -4,7 +4,7 @@ import { getYahooCandles, syntheticImbalance } from "@/lib/api/yahoo";
 import { getCryptoNews, getGoogleNews } from "@/lib/api/news";
 import { calculatePressure } from "@/lib/analysis/pressure";
 import { calculateConfluence } from "@/lib/analysis/confluence";
-import type { Timeframe, AssetClass } from "@/lib/types";
+import type { Timeframe, AssetClass, PressureData } from "@/lib/types";
 
 const ALL_TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
 
@@ -19,20 +19,45 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch candles + news in parallel
-    const [klinesResults, cryptoNews, googleNews] = await Promise.all([
-      Promise.allSettled(
-        ALL_TIMEFRAMES.map((tf) =>
-          assetClass === "crypto"
-            ? getCoinGeckoCandles(symbol.toLowerCase(), tf)
-            : getYahooCandles(symbol, tf)
-        )
-      ),
+    // Fetch news in background while we get candles
+    const newsPromise = Promise.all([
       getCryptoNews(base).catch(() => []),
       getGoogleNews(base + " price").catch(() => []),
     ]);
 
-    // Calculate news sentiment
+    // For crypto (CoinGecko): fetch sequentially to avoid rate limits
+    // For Yahoo: can parallelize since batching already handles rate limits
+    const timeframePressures: { timeframe: Timeframe; pressure: PressureData }[] = [];
+
+    if (assetClass === "crypto") {
+      // Sequential with small gaps to respect CoinGecko rate limit
+      for (const tf of ALL_TIMEFRAMES) {
+        try {
+          const candles = await getCoinGeckoCandles(symbol.toLowerCase(), tf);
+          const imbalance = syntheticOrderBookImbalance(candles);
+          const pressure = calculatePressure(candles, imbalance);
+          timeframePressures.push({ timeframe: tf, pressure });
+        } catch {
+          // Skip failed timeframes
+        }
+      }
+    } else {
+      // Yahoo can handle parallel
+      const klinesResults = await Promise.allSettled(
+        ALL_TIMEFRAMES.map((tf) => getYahooCandles(symbol, tf))
+      );
+      for (let i = 0; i < ALL_TIMEFRAMES.length; i++) {
+        const result = klinesResults[i];
+        if (result.status === "rejected") continue;
+        const candles = result.value;
+        const imbalance = syntheticImbalance(candles);
+        const pressure = calculatePressure(candles, imbalance);
+        timeframePressures.push({ timeframe: ALL_TIMEFRAMES[i], pressure });
+      }
+    }
+
+    // Get news sentiment
+    const [cryptoNews, googleNews] = await newsPromise;
     const allNews = [...cryptoNews, ...googleNews];
     let sentimentScore = 0;
     for (const n of allNews) {
@@ -43,20 +68,6 @@ export async function GET(request: NextRequest) {
       ? Math.round((sentimentScore / allNews.length) * 100)
       : 0;
 
-    const timeframePressures = ALL_TIMEFRAMES
-      .map((tf, i) => {
-        const result = klinesResults[i];
-        if (result.status === "rejected") return null;
-        const candles = result.value;
-        const imbalance = assetClass === "crypto"
-          ? syntheticOrderBookImbalance(candles)
-          : syntheticImbalance(candles);
-        const pressure = calculatePressure(candles, imbalance);
-        return { timeframe: tf, pressure };
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null);
-
-    // Pass news sentiment into confluence
     const confluence = calculateConfluence(timeframePressures, newsSentiment);
 
     return NextResponse.json({ confluence, symbol, newsSentiment });

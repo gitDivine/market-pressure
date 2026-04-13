@@ -4,27 +4,33 @@ import type { Timeframe } from "../types";
 
 const BASE = "https://api.coingecko.com/api/v3";
 
-// CoinGecko timeframe → days + interval mapping
-const TF_CONFIG: Record<Timeframe, { days: string; interval?: string }> = {
-  "1m": { days: "1" },       // 5-min candles (CG auto)
-  "5m": { days: "1" },       // 5-min candles
-  "15m": { days: "1" },      // 5-min candles, we'll resample
-  "1h": { days: "2" },       // hourly candles
-  "4h": { days: "7" },       // hourly candles, resample to 4h
-  "1d": { days: "30" },      // daily candles
-  "1w": { days: "90" },      // daily candles, resample to weekly
+const TF_CONFIG: Record<Timeframe, { days: string }> = {
+  "1m": { days: "1" },
+  "5m": { days: "1" },
+  "15m": { days: "1" },
+  "1h": { days: "2" },
+  "4h": { days: "7" },
+  "1d": { days: "30" },
+  "1w": { days: "90" },
 };
 
-// Rate-limit aware fetch with retry
+// Shared rate-limit queue — max 1 request per 200ms
+let lastRequestTime = 0;
 async function cgFetch(url: string, revalidate = 60): Promise<Response> {
+  // Throttle: wait at least 200ms between requests
+  const now = Date.now();
+  const wait = Math.max(0, lastRequestTime + 200 - now);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastRequestTime = Date.now();
+
   const res = await fetch(url, {
     next: { revalidate },
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(12000),
   });
   if (res.status === 429) {
-    // Rate limited — wait and retry once
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 3000));
+    lastRequestTime = Date.now();
     return fetch(url, {
       next: { revalidate },
       headers: { Accept: "application/json" },
@@ -35,7 +41,6 @@ async function cgFetch(url: string, revalidate = 60): Promise<Response> {
 }
 
 export async function getCoinGeckoPairs(): Promise<PairInfo[]> {
-  // Fetch top 200 coins by market cap
   const res = await cgFetch(
     `${BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=200&page=1&sparkline=false&price_change_percentage=24h`,
     120
@@ -51,13 +56,12 @@ export async function getCoinGeckoPairs(): Promise<PairInfo[]> {
     total_volume: number;
   }> = await res.json();
 
-  // Filter out stablecoins and low-volume coins
   const stablecoins = new Set(["usdt", "usdc", "dai", "busd", "tusd", "usdp", "frax", "usdd", "gusd", "pyusd", "fdusd"]);
 
   return data
     .filter((c) => !stablecoins.has(c.symbol.toLowerCase()) && c.total_volume > 50000)
     .map((c) => ({
-      symbol: c.id, // CoinGecko uses id for API calls
+      symbol: c.id,
       name: `${c.symbol.toUpperCase()}/USD`,
       base: c.symbol.toUpperCase(),
       quote: "USD",
@@ -73,59 +77,76 @@ export async function getCoinGeckoCandles(
 ): Promise<Candle[]> {
   const config = TF_CONFIG[timeframe];
 
-  // CoinGecko OHLC endpoint
+  // Use market_chart for BOTH price and volume in one request (saves rate limit)
   const res = await cgFetch(
-    `${BASE}/coins/${coinId}/ohlc?vs_currency=usd&days=${config.days}`,
+    `${BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${config.days}`,
     30
   );
-  if (!res.ok) throw new Error(`CoinGecko OHLC failed for ${coinId}: ${res.status}`);
+  if (!res.ok) throw new Error(`CoinGecko chart failed for ${coinId}: ${res.status}`);
 
-  const data: number[][] = await res.json();
+  const data: {
+    prices: number[][];
+    total_volumes: number[][];
+  } = await res.json();
 
-  // CoinGecko OHLC format: [timestamp, open, high, low, close]
-  // No volume in OHLC — we'll get it from market_chart
-  const volumeData = await getVolumeData(coinId, config.days);
+  const prices = data.prices || [];
+  const volumes = data.total_volumes || [];
 
-  const candles: Candle[] = data.map((k, i) => {
-    const close = k[4];
-    const open = k[1];
-    // Estimate volume distribution from price movement
-    const vol = volumeData[i] || 0;
-    // Approximate taker buy volume: if close > open, more buy pressure
-    const buyRatio = close >= open ? 0.55 + (close - open) / open * 2 : 0.45 - (open - close) / open * 2;
-    const clampedRatio = Math.max(0.2, Math.min(0.8, buyRatio));
+  if (prices.length < 4) return [];
 
-    return {
-      timestamp: k[0],
-      open: k[1],
-      high: k[2],
-      low: k[3],
-      close: k[4],
+  // Build candles from price points by grouping adjacent points
+  // Each "candle" = a window of price points
+  const windowSize = Math.max(2, Math.floor(prices.length / 50)); // ~50 candles
+  const candles: Candle[] = [];
+
+  for (let i = 0; i < prices.length - windowSize; i += windowSize) {
+    const window = prices.slice(i, i + windowSize + 1);
+    const volWindow = volumes.slice(i, i + windowSize + 1);
+
+    const open = window[0][1];
+    const close = window[window.length - 1][1];
+    const high = Math.max(...window.map((p) => p[1]));
+    const low = Math.min(...window.map((p) => p[1]));
+    const vol = volWindow.reduce((s, v) => s + (v[1] || 0), 0) / Math.max(1, volWindow.length);
+    const timestamp = window[0][0];
+
+    // Accurate buy ratio using wick analysis:
+    // - Body = |close - open|
+    // - Upper wick = high - max(open, close) → selling rejection
+    // - Lower wick = min(open, close) - low → buying support
+    const bodyTop = Math.max(open, close);
+    const bodyBottom = Math.min(open, close);
+    const upperWick = high - bodyTop;
+    const lowerWick = bodyBottom - low;
+    const totalRange = high - low;
+
+    let buyRatio = 0.5; // Start neutral
+    if (totalRange > 0) {
+      // Body direction: close > open = bullish body
+      const bodyDirection = (close - open) / totalRange; // -1 to 1
+      // Wick balance: more lower wick = buying support, more upper wick = selling
+      const wickBalance = (lowerWick - upperWick) / totalRange; // -1 to 1
+
+      // Combine: 60% body direction, 40% wick analysis
+      buyRatio = 0.5 + (bodyDirection * 0.3) + (wickBalance * 0.2);
+    }
+    const clampedRatio = Math.max(0.15, Math.min(0.85, buyRatio));
+
+    candles.push({
+      timestamp,
+      open,
+      high,
+      low,
+      close,
       volume: vol,
       takerBuyVolume: vol * clampedRatio,
-    };
-  });
+    });
+  }
 
-  // Resample if needed for larger timeframes
   if (timeframe === "4h") return resampleCandles(candles, 4);
   if (timeframe === "1w") return resampleCandles(candles, 7);
 
   return candles;
-}
-
-async function getVolumeData(coinId: string, days: string): Promise<number[]> {
-  try {
-    const res = await cgFetch(
-      `${BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
-      60
-    );
-    if (!res.ok) return [];
-
-    const data: { total_volumes: number[][] } = await res.json();
-    return data.total_volumes.map((v) => v[1]);
-  } catch {
-    return [];
-  }
 }
 
 function resampleCandles(candles: Candle[], groupSize: number): Candle[] {
@@ -146,20 +167,34 @@ function resampleCandles(candles: Candle[], groupSize: number): Candle[] {
   return result;
 }
 
-// Synthetic order book from price momentum (since CoinGecko has no order book)
+// Synthetic order book using wick analysis, not just candle color
 export function syntheticOrderBookImbalance(candles: Candle[]): number {
   if (candles.length < 5) return 0;
 
   const recent = candles.slice(-10);
-  let bullishCandles = 0;
-  let totalRange = 0;
+  let score = 0;
 
   for (const c of recent) {
-    if (c.close > c.open) bullishCandles++;
-    totalRange += c.high - c.low;
+    const totalRange = c.high - c.low;
+    if (totalRange === 0) continue;
+
+    const bodyTop = Math.max(c.open, c.close);
+    const bodyBottom = Math.min(c.open, c.close);
+    const upperWick = c.high - bodyTop;
+    const lowerWick = bodyBottom - c.low;
+    const body = bodyTop - bodyBottom;
+
+    // Body direction
+    const direction = c.close > c.open ? 1 : c.close < c.open ? -1 : 0;
+    // Body significance (big body = strong conviction)
+    const bodyRatio = body / totalRange;
+    // Wick rejection (upper wick = sell rejection, lower wick = buy support)
+    const wickSignal = (lowerWick - upperWick) / totalRange;
+
+    // Weighted: 50% direction*conviction, 50% wick rejection
+    score += (direction * bodyRatio * 0.5) + (wickSignal * 0.5);
   }
 
-  // Ratio of bullish candles as proxy for order book imbalance
-  const ratio = (bullishCandles / recent.length - 0.5) * 2; // -1 to 1
-  return Math.max(-0.8, Math.min(0.8, ratio));
+  const avg = score / recent.length;
+  return Math.max(-0.8, Math.min(0.8, avg));
 }

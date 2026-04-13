@@ -198,9 +198,18 @@ export async function getYahooCandles(
     if (o == null || h == null || l == null || c == null) continue;
 
     const vol = v ?? 0;
-    const buyRatio = c >= o
-      ? 0.55 + Math.min(0.25, (c - o) / o * 3)
-      : 0.45 - Math.min(0.25, (o - c) / o * 3);
+    const totalRange = h - l;
+    let buyRatio = 0.5; // Start neutral
+    if (totalRange > 0) {
+      const bodyTop = Math.max(o, c);
+      const bodyBottom = Math.min(o, c);
+      const upperWick = h - bodyTop;
+      const lowerWick = bodyBottom - l;
+      const bodyDirection = (c - o) / totalRange;
+      const wickBalance = (lowerWick - upperWick) / totalRange;
+      buyRatio = 0.5 + (bodyDirection * 0.3) + (wickBalance * 0.2);
+    }
+    const clampedBuyRatio = Math.max(0.15, Math.min(0.85, buyRatio));
 
     candles.push({
       timestamp: timestamps[i] * 1000,
@@ -209,7 +218,7 @@ export async function getYahooCandles(
       low: l,
       close: c,
       volume: vol,
-      takerBuyVolume: vol * Math.max(0.2, Math.min(0.8, buyRatio)),
+      takerBuyVolume: vol * clampedBuyRatio,
     });
   }
 
@@ -238,9 +247,25 @@ function resampleCandles(candles: Candle[], groupSize: number): Candle[] {
 export function syntheticImbalance(candles: Candle[]): number {
   if (candles.length < 5) return 0;
   const recent = candles.slice(-10);
-  let bullish = 0;
+  let score = 0;
+
   for (const c of recent) {
-    if (c.close > c.open) bullish++;
+    const totalRange = c.high - c.low;
+    if (totalRange === 0) continue;
+
+    const bodyTop = Math.max(c.open, c.close);
+    const bodyBottom = Math.min(c.open, c.close);
+    const upperWick = c.high - bodyTop;
+    const lowerWick = bodyBottom - c.low;
+    const body = bodyTop - bodyBottom;
+
+    const direction = c.close > c.open ? 1 : c.close < c.open ? -1 : 0;
+    const bodyRatio = body / totalRange;
+    const wickSignal = (lowerWick - upperWick) / totalRange;
+
+    score += (direction * bodyRatio * 0.5) + (wickSignal * 0.5);
   }
-  return Math.max(-0.8, Math.min(0.8, (bullish / recent.length - 0.5) * 2));
+
+  const avg = score / recent.length;
+  return Math.max(-0.8, Math.min(0.8, avg));
 }
