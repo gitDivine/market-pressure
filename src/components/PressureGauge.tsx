@@ -19,7 +19,7 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
         <p className="text-sm font-medium text-red">Failed to load pressure data</p>
         <p className="text-xs text-muted">Binance API may be temporarily unavailable.</p>
         {onRetry && (
-          <button onClick={onRetry} className="mt-1 rounded-lg bg-card px-4 py-1.5 text-xs font-medium transition-colors hover:bg-card-hover active:scale-95">
+          <button onClick={onRetry} className="mt-1 min-h-[44px] rounded-lg bg-card px-5 py-2 text-sm font-medium transition-colors hover:bg-card-hover active:scale-95">
             Retry
           </button>
         )}
@@ -29,11 +29,11 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
 
   if (loading || !data) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="skeleton mb-4 h-5 w-32 rounded" />
         <div className="skeleton mb-6 h-10 w-full rounded-full" />
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="skeleton h-16 rounded-xl" />
           ))}
         </div>
@@ -50,9 +50,9 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
   const TrendIcon = trend.icon;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between sm:mb-5">
         <h3 className="text-sm font-medium text-muted">Buy / Sell Pressure</h3>
         <div className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold", trend.bg, trend.color)}>
           <TrendIcon className="h-3 w-3" />
@@ -65,7 +65,7 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
         <span className="text-green">Buyers {data.buyPressure}%</span>
         <span className="text-red">Sellers {data.sellPressure}%</span>
       </div>
-      <div className="relative mb-6 h-10 overflow-hidden rounded-full bg-red/20">
+      <div className="relative mb-5 h-10 overflow-hidden rounded-full bg-red/20 sm:mb-6 sm:h-12">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${data.buyPressure}%` }}
@@ -76,14 +76,14 @@ export default function PressureGauge({ data, loading, error, onRetry }: Props) 
         <div className="absolute inset-y-0 left-1/2 w-px bg-white/20" />
         {/* Percentage label */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="rounded-full bg-background/60 px-2 py-0.5 text-xs font-bold backdrop-blur-sm">
+          <span className="rounded-full bg-background/60 px-2.5 py-0.5 text-xs font-bold backdrop-blur-sm sm:text-sm">
             {data.buyPressure > data.sellPressure ? "+" : ""}{data.buyPressure - data.sellPressure}%
           </span>
         </div>
       </div>
 
-      {/* Indicators */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Indicators — 2 cols mobile, 4 cols desktop */}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         <IndicatorCard label="RSI" value={data.rsi.toFixed(1)} signal={data.rsi > 60 ? "buy" : data.rsi < 40 ? "sell" : "neutral"} />
         <IndicatorCard label="MFI" value={data.mfi.toFixed(1)} signal={data.mfi > 60 ? "buy" : data.mfi < 40 ? "sell" : "neutral"} />
         <IndicatorCard
@@ -108,9 +108,9 @@ function IndicatorCard({ label, value, signal }: { label: string; value: string;
     neutral: "border-border bg-card-hover",
   };
   return (
-    <div className={cn("rounded-xl border px-3 py-2.5", colors[signal])}>
+    <div className={cn("rounded-xl border px-3 py-2.5 sm:px-3 sm:py-3", colors[signal])}>
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold">{value}</p>
+      <p className="mt-0.5 text-sm font-semibold sm:text-base">{value}</p>
     </div>
   );
 }

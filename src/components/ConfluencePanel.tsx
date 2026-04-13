@@ -37,7 +37,7 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
         <p className="text-sm font-medium text-red">Failed to load confluence data</p>
         <p className="text-xs text-muted">Could not fetch multi-timeframe data.</p>
         {onRetry && (
-          <button onClick={onRetry} className="mt-1 rounded-lg bg-card px-4 py-1.5 text-xs font-medium transition-colors hover:bg-card-hover active:scale-95">
+          <button onClick={onRetry} className="mt-1 min-h-[44px] rounded-lg bg-card px-5 py-2 text-sm font-medium transition-colors hover:bg-card-hover active:scale-95">
             Retry
           </button>
         )}
@@ -47,12 +47,12 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
 
   if (loading || !data) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="skeleton mb-4 h-5 w-48 rounded" />
         <div className="skeleton mb-4 h-20 w-full rounded-xl" />
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <div key={i} className="skeleton h-16 flex-1 rounded-lg" />
+            <div key={i} className={cn("skeleton h-20 rounded-lg", i > 4 && "hidden sm:block")} />
           ))}
         </div>
       </div>
@@ -64,31 +64,31 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
   const hasDivergence = data.summary.includes("Divergence") || data.summary.includes("surging") || data.summary.includes("shifting");
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-5 flex items-center gap-2">
+      <div className="mb-4 flex items-center gap-2 sm:mb-5">
         <Layers className="h-4 w-4 text-accent" />
         <h3 className="text-sm font-medium text-muted">Multi-Timeframe Confluence</h3>
       </div>
 
       {/* Overall Trend Card */}
       <div className={cn(
-        "mb-5 rounded-xl border p-4",
+        "mb-4 rounded-xl border p-3 sm:mb-5 sm:p-4",
         data.overallTrend.includes("bullish") ? "border-green/20 bg-green-glow" :
         data.overallTrend.includes("bearish") ? "border-red/20 bg-red-glow" :
         "border-yellow/20 bg-yellow/5"
       )}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <TrendIcon className={cn("h-5 w-5", trendCfg.color)} />
             <div>
-              <p className={cn("text-lg font-bold", trendCfg.color)}>{trendCfg.label}</p>
-              <p className="text-xs text-muted">Overall Confluence</p>
+              <p className={cn("text-base font-bold sm:text-lg", trendCfg.color)}>{trendCfg.label}</p>
+              <p className="text-[10px] text-muted sm:text-xs">Overall Confluence</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold">{data.confidence}%</p>
-            <p className="text-xs text-muted">Confidence</p>
+            <p className="text-xl font-bold sm:text-2xl">{data.confidence}%</p>
+            <p className="text-[10px] text-muted sm:text-xs">Confidence</p>
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex items-start gap-2.5 rounded-xl border border-yellow/30 bg-yellow/5 p-3"
+          className="mb-4 flex items-start gap-2.5 rounded-xl border border-yellow/30 bg-yellow/5 p-3 sm:mb-5"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow" />
           <p className="text-xs leading-relaxed text-yellow/90">
@@ -107,8 +107,8 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
         </motion.div>
       )}
 
-      {/* Timeframe Grid */}
-      <div className="grid grid-cols-7 gap-1.5">
+      {/* Timeframe Grid — 4 cols on mobile, 7 on sm+ */}
+      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
         {data.timeframes.map((tf, i) => {
           const bp = tf.pressure.buyPressure;
           return (
@@ -118,7 +118,7 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.05 }}
               className={cn(
-                "flex flex-col items-center gap-1.5 rounded-lg border p-2.5 text-center",
+                "flex flex-col items-center gap-1 rounded-lg border p-2 text-center sm:gap-1.5 sm:p-2.5",
                 tf.trend === "bullish" ? "border-green/20 bg-green-glow" :
                 tf.trend === "bearish" ? "border-red/20 bg-red-glow" :
                 "border-border bg-card-hover"
@@ -142,14 +142,14 @@ export default function ConfluencePanel({ data, loading, error, onRetry }: Props
               )}>
                 {bp}%
               </span>
-              <span className="text-[9px] text-muted">w: {tf.weight}</span>
+              <span className="hidden text-[9px] text-muted sm:block">w: {tf.weight}</span>
             </motion.div>
           );
         })}
       </div>
 
       {/* Summary */}
-      <div className="mt-5 rounded-xl bg-background/50 p-3.5">
+      <div className="mt-4 rounded-xl bg-background/50 p-3 sm:mt-5 sm:p-3.5">
         <p className="whitespace-pre-line text-xs leading-relaxed text-muted">
           {data.summary}
         </p>

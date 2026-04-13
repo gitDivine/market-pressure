@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { FileText, AlertCircle, TrendingUp, Newspaper, Layers } from "lucide-react";
-import type { ConfluenceResult, PressureData, NewsItem } from "@/lib/types";
+import type { ConfluenceResult, PressureData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -148,7 +148,7 @@ const IMPORTANCE_COLORS = {
 export default function AnalysisNotes({ pair, pressure, confluence, newsSentiment, loading }: Props) {
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="skeleton mb-4 h-5 w-40 rounded" />
         {[1, 2, 3].map((i) => (
           <div key={i} className="skeleton mb-2 h-12 w-full rounded-lg" />
@@ -160,7 +160,7 @@ export default function AnalysisNotes({ pair, pressure, confluence, newsSentimen
   const notes = generateNotes(pair, pressure, confluence, newsSentiment);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
       <div className="mb-4 flex items-center gap-2">
         <FileText className="h-4 w-4 text-accent" />
         <h3 className="text-sm font-medium text-muted">Auto Analysis Notes</h3>

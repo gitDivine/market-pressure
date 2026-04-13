@@ -10,13 +10,13 @@ interface Props {
 
 export default function TimeframeSelector({ selected, onSelect }: Props) {
   return (
-    <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+    <div className="flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 sm:w-auto">
       {TIMEFRAMES.map((tf) => (
         <button
           key={tf.value}
           onClick={() => onSelect(tf.value)}
           className={cn(
-            "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all active:scale-95",
+            "min-h-[36px] min-w-[40px] shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all active:scale-95 sm:min-h-[32px] sm:min-w-[36px]",
             selected === tf.value
               ? "bg-accent text-white shadow-md shadow-accent/25"
               : "text-muted hover:text-foreground hover:bg-card-hover"

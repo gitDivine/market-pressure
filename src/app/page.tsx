@@ -81,7 +81,6 @@ export default function Home() {
     setLastUpdate(new Date());
   }, [selectedPair, timeframe, fetchPressure, fetchConfluence, fetchNews]);
 
-  // Fetch when pair or timeframe changes
   useEffect(() => {
     if (!selectedPair) return;
     fetchPressure(selectedPair.symbol, timeframe);
@@ -94,7 +93,6 @@ export default function Home() {
     setLastUpdate(new Date());
   }, [selectedPair, fetchConfluence, fetchNews]);
 
-  // Auto-refresh every 30s
   useEffect(() => {
     if (!selectedPair) return;
     const interval = setInterval(fetchAll, 30000);
@@ -105,42 +103,42 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
-        {/* Controls */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <PairSelector selected={selectedPair} onSelect={setSelectedPair} />
-          <TimeframeSelector selected={timeframe} onSelect={setTimeframe} />
-
-          <button
-            onClick={fetchAll}
-            disabled={!selectedPair}
-            className={cn(
-              "ml-auto flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs transition-all hover:border-accent/50 hover:bg-card-hover active:scale-95 disabled:opacity-40",
-              (loading.pressure || loading.confluence) && "animate-pulse"
+      <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-4 sm:px-4 sm:py-6">
+        {/* Controls — stacks cleanly on mobile */}
+        <div className="mb-4 space-y-2 sm:mb-6 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          <div className="flex items-center gap-2">
+            <PairSelector selected={selectedPair} onSelect={setSelectedPair} />
+            <button
+              onClick={fetchAll}
+              disabled={!selectedPair}
+              className={cn(
+                "flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs transition-all hover:border-accent/50 hover:bg-card-hover active:scale-95 disabled:opacity-40 sm:ml-auto sm:min-h-[36px] sm:min-w-0 sm:px-3 sm:py-2",
+                (loading.pressure || loading.confluence) && "animate-pulse"
+              )}
+            >
+              <RefreshCw className={cn("h-4 w-4 sm:h-3.5 sm:w-3.5", (loading.pressure || loading.confluence) && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            {lastUpdate && (
+              <span className="hidden text-[10px] text-muted sm:inline">
+                Updated {lastUpdate.toLocaleTimeString()}
+              </span>
             )}
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", (loading.pressure || loading.confluence) && "animate-spin")} />
-            Refresh
-          </button>
-
-          {lastUpdate && (
-            <span className="text-[10px] text-muted">
-              Updated {lastUpdate.toLocaleTimeString()}
-            </span>
-          )}
+          </div>
+          <TimeframeSelector selected={timeframe} onSelect={setTimeframe} />
         </div>
 
         {!selectedPair ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-32 text-center"
+            className="flex flex-col items-center justify-center px-4 py-24 text-center sm:py-32"
           >
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
               <RefreshCw className="h-7 w-7 text-accent" />
             </div>
             <h2 className="mb-2 text-lg font-semibold">Select a pair to begin</h2>
-            <p className="max-w-sm text-sm text-muted">
+            <p className="max-w-sm text-sm leading-relaxed text-muted">
               Choose a crypto pair to see real-time buying vs selling pressure with multi-timeframe confluence analysis.
             </p>
           </motion.div>
@@ -149,10 +147,10 @@ export default function Home() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="grid gap-5 lg:grid-cols-3"
+            className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0"
           >
-            {/* Left: Pressure + Confluence */}
-            <div className="space-y-5 lg:col-span-2">
+            {/* Left: Pressure + Confluence + Notes */}
+            <div className="space-y-4 lg:col-span-2 lg:space-y-5">
               <PressureGauge data={pressure} loading={loading.pressure} error={errors.pressure} onRetry={() => fetchPressure(selectedPair.symbol, timeframe)} />
               <ConfluencePanel data={confluence} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchConfluence(selectedPair.symbol)} />
               <AnalysisNotes
@@ -164,9 +162,9 @@ export default function Home() {
               />
             </div>
 
-            {/* Right: News */}
+            {/* Right: News — not sticky on mobile, sticky on desktop */}
             <div>
-              <div className="sticky top-20">
+              <div className="lg:sticky lg:top-20">
                 <NewsPanel news={news} sentiment={newsSentiment} loading={loading.news} error={errors.news} onRetry={() => selectedPair && fetchNews(selectedPair.base)} />
               </div>
             </div>
@@ -174,8 +172,8 @@ export default function Home() {
         )}
 
         {/* Disclaimer */}
-        <div className="mt-10 rounded-xl border border-yellow/20 bg-yellow/5 p-4 text-center">
-          <p className="text-xs text-yellow/80">
+        <div className="mt-8 rounded-xl border border-yellow/20 bg-yellow/5 p-3 text-center sm:mt-10 sm:p-4">
+          <p className="text-[11px] leading-relaxed text-yellow/80 sm:text-xs">
             This tool provides algorithmic analysis for educational purposes only. Not financial advice.
             Always do your own research before making trading decisions. Past performance does not guarantee future results.
           </p>
