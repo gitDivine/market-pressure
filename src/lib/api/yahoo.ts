@@ -70,10 +70,29 @@ async function batchChartQuotes(
 
 // --- SYMBOLS ---
 const FOREX_SYMBOLS = [
-  "EURUSD=X", "GBPUSD=X", "USDJPY=X", "USDCHF=X", "AUDUSD=X",
-  "USDCAD=X", "NZDUSD=X", "EURGBP=X", "EURJPY=X", "GBPJPY=X",
-  "EURCHF=X", "AUDJPY=X", "GBPCHF=X", "EURAUD=X", "EURCAD=X",
-  "AUDNZD=X", "NZDJPY=X", "GBPAUD=X", "GBPCAD=X", "CHFJPY=X",
+  // Majors (7)
+  "EURUSD=X", "GBPUSD=X", "USDJPY=X", "USDCHF=X",
+  "AUDUSD=X", "USDCAD=X", "NZDUSD=X",
+  // EUR crosses (10)
+  "EURGBP=X", "EURJPY=X", "EURCHF=X", "EURAUD=X", "EURCAD=X",
+  "EURNZD=X", "EURSGD=X", "EURHKD=X", "EURSEK=X", "EURNOK=X",
+  // GBP crosses (8)
+  "GBPJPY=X", "GBPCHF=X", "GBPAUD=X", "GBPCAD=X", "GBPNZD=X",
+  "GBPSGD=X", "GBPSEK=X", "GBPNOK=X",
+  // JPY crosses (6)
+  "AUDJPY=X", "NZDJPY=X", "CHFJPY=X", "CADJPY=X", "SGDJPY=X", "HKDJPY=X",
+  // AUD crosses (3)
+  "AUDNZD=X", "AUDCAD=X", "AUDCHF=X",
+  // NZD crosses (2)
+  "NZDCAD=X", "NZDCHF=X",
+  // CAD crosses (1)
+  "CADCHF=X",
+  // Exotics — USD pairs (15)
+  "USDSGD=X", "USDHKD=X", "USDZAR=X", "USDMXN=X", "USDTRY=X",
+  "USDSEK=X", "USDNOK=X", "USDDKK=X", "USDPLN=X", "USDHUF=X",
+  "USDCZK=X", "USDINR=X", "USDTHB=X", "USDKRW=X", "USDTWD=X",
+  // Exotics — other (6)
+  "ZARJPY=X", "MXNJPY=X", "TRYJPY=X", "NOKJPY=X", "SEKJPY=X", "NOKSEK=X",
 ];
 
 const INDEX_SYMBOLS = [
