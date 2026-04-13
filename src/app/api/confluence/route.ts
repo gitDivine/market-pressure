@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const symbol = searchParams.get("symbol") || "";
   const assetClass = (searchParams.get("class") || "crypto") as AssetClass;
   const base = searchParams.get("base") || symbol;
+  const selectedTf = (searchParams.get("timeframe") || "1h") as Timeframe;
 
   if (!symbol) {
     return NextResponse.json({ error: "Symbol required" }, { status: 400 });
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate verdict (replaces old confluence)
-    const verdict = calculateVerdict(timeframeAnalyses, combinedSentiment);
+    const verdict = calculateVerdict(timeframeAnalyses, combinedSentiment, selectedTf);
 
     return NextResponse.json({
       verdict,

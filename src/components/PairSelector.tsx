@@ -16,7 +16,6 @@ export default function PairSelector({ selected, onSelect, classFilter }: Props)
   const [allPairs, setAllPairs] = useState<PairInfo[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [strongOnly, setStrongOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -31,13 +30,11 @@ export default function PairSelector({ selected, onSelect, classFilter }: Props)
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter by asset class + strong signal
+  // Filter by asset class
   const pairs = useMemo(() => {
-    let filtered = allPairs;
-    if (classFilter) filtered = filtered.filter((p) => p.class === classFilter);
-    if (strongOnly) filtered = filtered.filter((p) => Math.abs(p.change24h ?? 0) >= 2.5);
-    return filtered;
-  }, [allPairs, classFilter, strongOnly]);
+    if (!classFilter) return allPairs;
+    return allPairs.filter((p) => p.class === classFilter);
+  }, [allPairs, classFilter]);
 
   // Close on outside click (desktop only — mobile has explicit close button)
   useEffect(() => {
@@ -141,24 +138,6 @@ export default function PairSelector({ selected, onSelect, classFilter }: Props)
                   aria-label="Close"
                 >
                   <X className="h-5 w-5" />
-                </button>
-              </div>
-              {/* Strong Only toggle */}
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-xs text-muted">Strong signals only</span>
-                <button
-                  onClick={() => setStrongOnly(!strongOnly)}
-                  className={cn(
-                    "relative h-5 w-9 rounded-full transition-colors",
-                    strongOnly ? "bg-accent" : "bg-border"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-                      strongOnly ? "translate-x-4" : "translate-x-0.5"
-                    )}
-                  />
                 </button>
               </div>
 

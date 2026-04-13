@@ -57,11 +57,11 @@ export default function Home() {
     setLoading((l) => ({ ...l, pressure: false }));
   }, []);
 
-  const fetchVerdict = useCallback(async (pair: PairInfo) => {
+  const fetchVerdict = useCallback(async (pair: PairInfo, tf: Timeframe) => {
     setLoading((l) => ({ ...l, confluence: true }));
     setErrors((e) => ({ ...e, confluence: false }));
     try {
-      const res = await fetch(`/api/confluence?symbol=${encodeURIComponent(pair.symbol)}&class=${pair.class}&base=${encodeURIComponent(pair.base)}`);
+      const res = await fetch(`/api/confluence?symbol=${encodeURIComponent(pair.symbol)}&class=${pair.class}&base=${encodeURIComponent(pair.base)}&timeframe=${tf}`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       if (data.verdict) setVerdict(data.verdict);
@@ -90,24 +90,20 @@ export default function Home() {
   const fetchAll = useCallback(() => {
     if (!selectedPair) return;
     fetchPressure(selectedPair, timeframe);
-    fetchVerdict(selectedPair);
+    fetchVerdict(selectedPair, timeframe);
     fetchNews(selectedPair, timeframe);
     setLastUpdate(new Date());
   }, [selectedPair, timeframe, fetchPressure, fetchVerdict, fetchNews]);
 
-  // Refetch pressure + news when pair or timeframe changes
+  // Refetch everything when pair or timeframe changes
+  // Verdict is now adaptive — it needs the selected TF to weight correctly
   useEffect(() => {
     if (!selectedPair) return;
     fetchPressure(selectedPair, timeframe);
+    fetchVerdict(selectedPair, timeframe);
     fetchNews(selectedPair, timeframe);
-  }, [selectedPair, timeframe, fetchPressure, fetchNews]);
-
-  // Refetch confluence when pair changes (confluence scans all TFs already)
-  useEffect(() => {
-    if (!selectedPair) return;
-    fetchVerdict(selectedPair);
     setLastUpdate(new Date());
-  }, [selectedPair, fetchVerdict]);
+  }, [selectedPair, timeframe, fetchPressure, fetchVerdict, fetchNews]);
 
   useEffect(() => {
     if (!selectedPair) return;
@@ -176,7 +172,7 @@ export default function Home() {
           >
             <div className="space-y-4 lg:col-span-2 lg:space-y-5">
               <PressureGauge data={pressure} loading={loading.pressure} error={errors.pressure} onRetry={() => fetchPressure(selectedPair, timeframe)} />
-              <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair)} selectedTimeframe={timeframe} />
+              <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair, timeframe)} selectedTimeframe={timeframe} />
               <AnalysisNotes
                 pair={selectedPair.name}
                 pressure={pressure}

@@ -120,7 +120,9 @@ export default function VerdictPanel({ data, loading, error, onRetry, selectedTi
               <p className={cn("text-base font-bold sm:text-lg", cfg.color)}>
                 {cfg.label}
               </p>
-              <p className="text-[10px] text-muted sm:text-xs">Market Verdict</p>
+              <p className="text-[10px] text-muted sm:text-xs">
+                {data.tradingContext === "scalp" ? "Scalp" : data.tradingContext === "intraday" ? "Intraday" : "Position"} Verdict
+              </p>
             </div>
           </div>
           <div className="text-right">
@@ -128,6 +130,14 @@ export default function VerdictPanel({ data, loading, error, onRetry, selectedTi
             <p className="text-[10px] text-muted sm:text-xs">Confidence</p>
           </div>
         </div>
+        {/* Dual verdict: scalp vs position */}
+        {data.scalpVerdict !== data.positionVerdict && (
+          <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-background/50 px-3 py-2">
+            <DualVerdictBadge label="Scalp" verdict={data.scalpVerdict} />
+            <span className="text-[10px] font-medium text-muted">vs</span>
+            <DualVerdictBadge label="Position" verdict={data.positionVerdict} />
+          </div>
+        )}
       </motion.div>
 
       {/* ── 2. Dimensions Bar ──────────────────────────────────────────── */}
@@ -377,6 +387,24 @@ function MiniDimCard({ label, value, color, detail }: { label: string; value: st
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</p>
       <p className="mt-0.5 text-xs font-bold capitalize">{value}</p>
       <p className="mt-0.5 text-[10px] leading-tight text-muted line-clamp-2">{detail}</p>
+    </div>
+  );
+}
+
+// ─── Dual Verdict Badge ─────────────────────────────────────────────────────
+
+type VerdictLabelType = "strong_bullish" | "bullish" | "neutral" | "bearish" | "strong_bearish";
+
+function DualVerdictBadge({ label, verdict }: { label: string; verdict: VerdictLabelType }) {
+  const cfg = VERDICT_CONFIG[verdict];
+  const Icon = cfg.icon;
+  return (
+    <div className="flex flex-1 items-center gap-1.5 rounded-md border border-border/50 px-2 py-1.5">
+      <Icon className={cn("h-3 w-3 shrink-0", cfg.color)} />
+      <div className="min-w-0">
+        <p className="text-[9px] font-medium uppercase tracking-wider text-muted">{label}</p>
+        <p className={cn("text-xs font-bold", cfg.color)}>{cfg.label}</p>
+      </div>
     </div>
   );
 }
