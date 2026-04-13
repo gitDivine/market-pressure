@@ -108,17 +108,12 @@ function TradingChart({ pair, timeframe }: Props) {
       locale: "en",
       backgroundColor: "rgba(10, 11, 15, 1)",
       gridColor: "rgba(30, 32, 48, 0.6)",
-      hide_top_toolbar: false,
+      hide_top_toolbar: true,
       hide_legend: false,
       allow_symbol_change: false,
       save_image: false,
       calendar: false,
       hide_volume: false,
-      disabled_features: [
-        "header_interval_dialog_button",
-        "header_symbol_search",
-        "header_compare",
-      ],
       support_host: "https://www.tradingview.com",
       studies: [
         "RSI@tv-basicstudies",
