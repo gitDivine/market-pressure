@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   data: ConfluenceResult | null;
   loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
 }
 
 const TREND_CONFIG = {
@@ -28,7 +30,21 @@ const TF_LABELS: Record<Timeframe, string> = {
   "1w": "1W",
 };
 
-export default function ConfluencePanel({ data, loading }: Props) {
+export default function ConfluencePanel({ data, loading, error, onRetry }: Props) {
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-red/20 bg-red-glow p-8 text-center">
+        <p className="text-sm font-medium text-red">Failed to load confluence data</p>
+        <p className="text-xs text-muted">Could not fetch multi-timeframe data.</p>
+        {onRetry && (
+          <button onClick={onRetry} className="mt-1 rounded-lg bg-card px-4 py-1.5 text-xs font-medium transition-colors hover:bg-card-hover active:scale-95">
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
   if (loading || !data) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6">

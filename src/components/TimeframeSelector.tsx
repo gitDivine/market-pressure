@@ -16,7 +16,7 @@ export default function TimeframeSelector({ selected, onSelect }: Props) {
           key={tf.value}
           onClick={() => onSelect(tf.value)}
           className={cn(
-            "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all",
+            "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all active:scale-95",
             selected === tf.value
               ? "bg-accent text-white shadow-md shadow-accent/25"
               : "text-muted hover:text-foreground hover:bg-card-hover"

@@ -6,12 +6,14 @@ import type { Timeframe } from "@/lib/types";
 
 const ALL_TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
 
+const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const symbol = searchParams.get("symbol");
+  const symbol = (searchParams.get("symbol") || "").toUpperCase();
 
-  if (!symbol) {
-    return NextResponse.json({ error: "Symbol required" }, { status: 400 });
+  if (!symbol || !SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: "Invalid symbol" }, { status: 400 });
   }
 
   try {

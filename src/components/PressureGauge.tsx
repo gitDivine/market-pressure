@@ -8,9 +8,25 @@ import { cn, formatNumber } from "@/lib/utils";
 interface Props {
   data: PressureData | null;
   loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
 }
 
-export default function PressureGauge({ data, loading }: Props) {
+export default function PressureGauge({ data, loading, error, onRetry }: Props) {
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-red/20 bg-red-glow p-8 text-center">
+        <p className="text-sm font-medium text-red">Failed to load pressure data</p>
+        <p className="text-xs text-muted">Binance API may be temporarily unavailable.</p>
+        {onRetry && (
+          <button onClick={onRetry} className="mt-1 rounded-lg bg-card px-4 py-1.5 text-xs font-medium transition-colors hover:bg-card-hover active:scale-95">
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
   if (loading || !data) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6">

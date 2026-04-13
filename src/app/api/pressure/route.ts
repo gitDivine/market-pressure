@@ -3,13 +3,17 @@ import { getBinanceKlines, getBinanceOrderBook } from "@/lib/api/binance";
 import { calculatePressure } from "@/lib/analysis/pressure";
 import type { Timeframe } from "@/lib/types";
 
+const VALID_TFS = new Set(["1m", "5m", "15m", "1h", "4h", "1d", "1w"]);
+const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const symbol = searchParams.get("symbol");
-  const timeframe = (searchParams.get("timeframe") || "1h") as Timeframe;
+  const symbol = (searchParams.get("symbol") || "").toUpperCase();
+  const tfParam = searchParams.get("timeframe") || "1h";
+  const timeframe = (VALID_TFS.has(tfParam) ? tfParam : "1h") as Timeframe;
 
-  if (!symbol) {
-    return NextResponse.json({ error: "Symbol required" }, { status: 400 });
+  if (!symbol || !SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: "Invalid symbol" }, { status: 400 });
   }
 
   try {

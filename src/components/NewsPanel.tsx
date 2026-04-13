@@ -9,9 +9,25 @@ interface Props {
   news: NewsItem[];
   sentiment: { overall: number; positive: number; negative: number; neutral: number; total: number } | null;
   loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
 }
 
-export default function NewsPanel({ news, sentiment, loading }: Props) {
+export default function NewsPanel({ news, sentiment, loading, error, onRetry }: Props) {
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-red/20 bg-red-glow p-6 text-center">
+        <p className="text-sm font-medium text-red">News unavailable</p>
+        <p className="text-xs text-muted">Could not fetch news data.</p>
+        {onRetry && (
+          <button onClick={onRetry} className="mt-1 rounded-lg bg-card px-4 py-1.5 text-xs font-medium transition-colors hover:bg-card-hover active:scale-95">
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6">

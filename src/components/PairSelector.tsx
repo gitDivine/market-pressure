@@ -47,7 +47,7 @@ export default function PairSelector({ selected, onSelect }: Props) {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm transition-all hover:border-accent/50 hover:bg-card-hover",
+          "flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm transition-all hover:border-accent/50 hover:bg-card-hover active:scale-[0.98]",
           open && "border-accent/50 ring-1 ring-accent/20"
         )}
       >
@@ -109,7 +109,7 @@ export default function PairSelector({ selected, onSelect }: Props) {
                     setSearch("");
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-card-hover",
+                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-card-hover active:scale-[0.98]",
                     selected?.symbol === pair.symbol && "bg-accent/10 text-accent"
                   )}
                 >

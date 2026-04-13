@@ -11,8 +11,8 @@ export default function Header() {
             <Activity className="h-4.5 w-4.5 text-accent" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold tracking-tight">Market Pressure</h1>
-            <p className="text-[10px] text-muted">Buy vs Sell — Multi-TF Confluence</p>
+            <h1 className="text-sm font-semibold tracking-tight">Market Assist</h1>
+            <p className="text-[10px] text-muted">Buy vs Sell Pressure — Multi-TF Confluence</p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted">

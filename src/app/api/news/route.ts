@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCryptoNews, getGoogleNews } from "@/lib/api/news";
 
+const SAFE_RE = /^[A-Za-z0-9 _-]{1,40}$/;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const asset = searchParams.get("asset") || undefined;
-  const query = searchParams.get("query") || asset || "crypto";
+  const rawAsset = searchParams.get("asset") || "";
+  const rawQuery = searchParams.get("query") || "";
+  const asset = SAFE_RE.test(rawAsset) ? rawAsset : undefined;
+  const query = SAFE_RE.test(rawQuery) ? rawQuery : asset || "crypto";
 
   try {
     const [cryptoNews, googleNews] = await Promise.all([

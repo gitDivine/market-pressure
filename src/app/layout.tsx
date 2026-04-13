@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Market Pressure — Buy vs Sell Pressure Dashboard",
+  title: "Market Assist — Buy vs Sell Pressure Dashboard",
   description:
     "Real-time buying vs selling pressure analysis across crypto, forex, and stocks with multi-timeframe confluence detection.",
 };
