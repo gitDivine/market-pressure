@@ -104,7 +104,7 @@ function TradingChart({ pair, timeframe }: Props) {
       interval: interval,
       timezone: "Etc/UTC",
       theme: "dark",
-      style: "1", // Candlestick
+      style: "1",
       locale: "en",
       backgroundColor: "rgba(10, 11, 15, 1)",
       gridColor: "rgba(30, 32, 48, 0.6)",
@@ -114,6 +114,11 @@ function TradingChart({ pair, timeframe }: Props) {
       save_image: false,
       calendar: false,
       hide_volume: false,
+      disabled_features: [
+        "header_interval_dialog_button",
+        "header_symbol_search",
+        "header_compare",
+      ],
       support_host: "https://www.tradingview.com",
       studies: [
         "RSI@tv-basicstudies",
@@ -132,9 +137,8 @@ function TradingChart({ pair, timeframe }: Props) {
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+      <div className="flex items-center border-b border-border px-4 py-2.5">
         <h3 className="text-sm font-medium text-muted">Chart — {pair.name}</h3>
-        <span className="text-[10px] text-muted/60">Powered by TradingView</span>
       </div>
       <div
         ref={containerRef}
