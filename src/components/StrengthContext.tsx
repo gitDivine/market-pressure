@@ -210,18 +210,7 @@ function StrengthContext({ pair, timeframe }: Props) {
           </>
         )}
 
-        {/* Fear & Greed — Stocks, Crypto, Indices */}
-        {data.fearGreed && (
-          <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-3 py-2.5 sm:col-span-2">
-            <span className="text-xs text-muted">The {pair.class === "crypto" ? "Crypto" : pair.class === "indices" ? "Index" : "Stock"} Market Sentiment</span>
-            <span className={cn(
-              "text-sm font-semibold",
-              data.fearGreed.value >= 55 ? "text-green" : data.fearGreed.value <= 45 ? "text-red" : "text-yellow"
-            )}>
-              {fgEmoji(data.fearGreed.value)} {data.fearGreed.label} ({data.fearGreed.value})
-            </span>
-          </div>
-        )}
+        {/* Fear & Greed moved to top bar — MarketSentimentBadge */}
       </div>
     </div>
   );

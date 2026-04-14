@@ -16,6 +16,7 @@ import { getExternalSymbol } from "@/components/TradeIdeas";
 import SessionClock from "@/components/SessionClock";
 import SentimentBadge from "@/components/SentimentBadge";
 import StrengthContext from "@/components/StrengthContext";
+import MarketSentimentBadge from "@/components/MarketSentimentBadge";
 import AnalysisNotes from "@/components/AnalysisNotes";
 import type { PairInfo, Timeframe, AssetClass, PressureData, NewsItem } from "@/lib/types";
 import type { VerdictResult } from "@/lib/analysis/verdict";
@@ -158,6 +159,9 @@ export default function Home() {
         {/* Session Clock + Sentiment */}
         <div className="mb-4 flex flex-wrap items-center gap-3 sm:mb-5">
           <SessionClock />
+          {selectedPair && (
+            <MarketSentimentBadge assetClass={selectedPair.class} />
+          )}
           {selectedPair && newsSentiment && (
             <SentimentBadge
               symbol={getExternalSymbol(selectedPair)}
