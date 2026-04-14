@@ -11,6 +11,7 @@ import PressureGauge from "@/components/PressureGauge";
 import TradingChart from "@/components/TradingChart";
 import VerdictPanel from "@/components/VerdictPanel";
 import NewsPanel from "@/components/NewsPanel";
+import TradeIdeas from "@/components/TradeIdeas";
 import AnalysisNotes from "@/components/AnalysisNotes";
 import type { PairInfo, Timeframe, AssetClass, PressureData, NewsItem } from "@/lib/types";
 import type { VerdictResult } from "@/lib/analysis/verdict";
@@ -174,6 +175,7 @@ export default function Home() {
             <div className="space-y-4 lg:col-span-2 lg:space-y-5">
               <PressureGauge data={pressure} loading={loading.pressure} error={errors.pressure} onRetry={() => fetchPressure(selectedPair, timeframe)} />
               <TradingChart pair={selectedPair} timeframe={timeframe} />
+              <TradeIdeas pair={selectedPair} />
               <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair, timeframe)} selectedTimeframe={timeframe} />
               <AnalysisNotes
                 pair={selectedPair.name}
