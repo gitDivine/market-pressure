@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageSquare, ExternalLink, RefreshCw, Image as ImageIcon } from "lucide-react";
+import { MessageSquare, ExternalLink, RefreshCw, Image as ImageIcon, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FeedbackEntry {
@@ -126,16 +126,29 @@ export default function AdminDashboard() {
             <MessageSquare className="h-5 w-5" />
             Feedback
           </h2>
-          <button
-            onClick={() => {
-              setLoading(true);
-              fetchFeedback();
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                if (!confirm("Delete the 100 oldest feedback entries?")) return;
+                await fetch("/api/feedback?action=delete_oldest_100");
+                fetchFeedback();
+              }}
+              className="text-xs text-red/70 hover:text-red flex items-center gap-1 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete oldest 100
+            </button>
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetchFeedback();
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Feedback entries */}
