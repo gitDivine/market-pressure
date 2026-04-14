@@ -26,7 +26,9 @@ function assetLabel(cls: AssetClass) {
     case "stocks": return "Stock";
     case "indices": return "Index";
     case "funds": return "Fund";
-    default: return "Market";
+    case "forex": return "Global";
+    case "bonds": return "Global";
+    default: return "Global";
   }
 }
 
@@ -34,18 +36,16 @@ function MarketSentimentBadge({ assetClass }: Props) {
   const [data, setData] = useState<FearGreedData | null>(null);
 
   useEffect(() => {
-    // Only show for stocks, crypto, indices, funds (not forex/bonds)
-    if (assetClass === "forex" || assetClass === "bonds") {
-      setData(null);
-      return;
-    }
+    // For forex/bonds, fetch stock market sentiment (VIX-derived) as global context
 
     let cancelled = false;
 
     const fetchFG = async () => {
       try {
+        // For forex/bonds, use stocks context to get VIX-derived global sentiment
+        const cls = (assetClass === "forex" || assetClass === "bonds") ? "stocks" : assetClass;
         const res = await fetch(
-          `/api/context?class=${assetClass}&symbol=&timeframe=1d&base=&quote=`
+          `/api/context?class=${cls}&symbol=&timeframe=1d&base=&quote=`
         );
         if (!res.ok) return;
         const d = await res.json();
