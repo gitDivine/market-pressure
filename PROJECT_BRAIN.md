@@ -1,4 +1,4 @@
-# Market Pressure — PROJECT BRAIN
+# Markets Assist — PROJECT BRAIN
 
 ## Project Summary
 Real-time buying vs selling pressure dashboard for crypto pairs (expandable to forex/stocks). Multi-timeframe confluence engine with LTF/HTF divergence detection, news sentiment, and auto-generated analysis notes.
@@ -7,7 +7,7 @@ Real-time buying vs selling pressure dashboard for crypto pairs (expandable to f
 - **Status**: MVP complete, deploying to Vercel
 - **Stack**: Next.js 15 (App Router), Tailwind CSS 4, Framer Motion, TypeScript
 - **Data sources**: Binance API (free), CryptoCompare (free), Google News RSS (free)
-- **Repo**: https://github.com/gitDivine/market-pressure
+- **Repo**: https://github.com/gitDivine/marketsassist
 
 ## Architecture
 ```
@@ -64,5 +64,5 @@ None currently.
 - Built full MVP from scratch
 - Implemented divergence detection system per user's insight about LTF vs HTF pressure conflicts
 - Three divergence types: early_breakout (1.8x boost), momentum_shift (1.4x), potential_reversal (1.15x)
-- Deployed to GitHub: gitDivine/market-pressure
+- Deployed to GitHub: gitDivine/marketsassist
 - Next: Vercel deployment
