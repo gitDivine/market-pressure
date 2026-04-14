@@ -15,6 +15,7 @@ import TradeIdeas from "@/components/TradeIdeas";
 import { getExternalSymbol } from "@/components/TradeIdeas";
 import SessionClock from "@/components/SessionClock";
 import SentimentBadge from "@/components/SentimentBadge";
+import StrengthContext from "@/components/StrengthContext";
 import AnalysisNotes from "@/components/AnalysisNotes";
 import type { PairInfo, Timeframe, AssetClass, PressureData, NewsItem } from "@/lib/types";
 import type { VerdictResult } from "@/lib/analysis/verdict";
@@ -189,6 +190,7 @@ export default function Home() {
           >
             <div className="space-y-4 lg:col-span-2 lg:space-y-5">
               <PressureGauge data={pressure} loading={loading.pressure} error={errors.pressure} onRetry={() => fetchPressure(selectedPair, timeframe)} />
+              <StrengthContext pair={selectedPair} timeframe={timeframe} />
               <TradingChart pair={selectedPair} timeframe={timeframe} />
               <TradeIdeas pair={selectedPair} />
               <VerdictPanel data={verdict} loading={loading.confluence} error={errors.confluence} onRetry={() => fetchVerdict(selectedPair, timeframe)} selectedTimeframe={timeframe} />
