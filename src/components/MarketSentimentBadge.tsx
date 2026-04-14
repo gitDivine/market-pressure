@@ -14,12 +14,10 @@ interface FearGreedData {
   source: string;
 }
 
-function fgEmoji(val: number) {
-  if (val >= 75) return "🤑";
-  if (val >= 55) return "😊";
-  if (val >= 45) return "😐";
-  if (val >= 25) return "😨";
-  return "😱";
+function fgDot(val: number) {
+  if (val >= 55) return "🟢";
+  if (val <= 45) return "🔴";
+  return "🟡";
 }
 
 function assetLabel(cls: AssetClass) {
@@ -73,7 +71,7 @@ function MarketSentimentBadge({ assetClass }: Props) {
         !isBullish && !isBearish && "border-yellow/30 bg-yellow/5 text-yellow"
       )}
     >
-      <span>{fgEmoji(data.value)}</span>
+      <span>{fgDot(data.value)}</span>
       <span className="hidden sm:inline">The {assetLabel(assetClass)} Market:</span>
       <span className="sm:hidden">{assetLabel(assetClass)}:</span>
       <span className="font-semibold tabular-nums">
