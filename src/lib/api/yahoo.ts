@@ -100,10 +100,10 @@ const COMMODITY_SYMBOLS = [
   { symbol: "GC=F", name: "XAU/USD (Gold)", base: "XAU", quote: "USD" },
   { symbol: "SI=F", name: "XAG/USD (Silver)", base: "XAG", quote: "USD" },
   { symbol: "PL=F", name: "XPT/USD (Platinum)", base: "XPT", quote: "USD" },
-  { symbol: "CL=F", name: "WTI Crude Oil", base: "OIL", quote: "USD" },
-  { symbol: "BZ=F", name: "Brent Crude Oil", base: "BRENT", quote: "USD" },
-  { symbol: "NG=F", name: "Natural Gas", base: "NATGAS", quote: "USD" },
-  { symbol: "HG=F", name: "Copper", base: "COPPER", quote: "USD" },
+  { symbol: "CL=F", name: "USOIL (WTI Crude)", base: "OIL", quote: "USD" },
+  { symbol: "BZ=F", name: "UKOIL (Brent Crude)", base: "BRENT", quote: "USD" },
+  { symbol: "NG=F", name: "NATGAS (Natural Gas)", base: "NATGAS", quote: "USD" },
+  { symbol: "HG=F", name: "COPPER (Copper)", base: "COPPER", quote: "USD" },
 ];
 
 const INDEX_SYMBOLS = [
