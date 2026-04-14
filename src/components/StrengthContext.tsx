@@ -199,7 +199,7 @@ function StrengthContext({ pair, timeframe }: Props) {
                 {data.relativeMomentum.vsUSD.direction === "strong" ? "🟢" : "🔴"} {data.relativeMomentum.vsUSD.direction === "strong" ? "Strong" : "Weak"} ({data.relativeMomentum.vsUSD.change > 0 ? "+" : ""}{data.relativeMomentum.vsUSD.change}%)
               </span>
             </div>
-            {data.relativeMomentum.vsBTC && (
+            {data.relativeMomentum.vsBTC && pair.base.toUpperCase() !== "BTC" && (
               <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-3 py-2.5">
                 <span className="text-xs text-muted">{pair.base} vs BTC</span>
                 <span className={cn("text-sm font-semibold", data.relativeMomentum.vsBTC.direction === "outperforming" ? "text-green" : "text-red")}>
@@ -213,7 +213,7 @@ function StrengthContext({ pair, timeframe }: Props) {
         {/* Fear & Greed — Stocks, Crypto, Indices */}
         {data.fearGreed && (
           <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-3 py-2.5 sm:col-span-2">
-            <span className="text-xs text-muted">Market Sentiment</span>
+            <span className="text-xs text-muted">The {pair.class === "crypto" ? "Crypto" : pair.class === "indices" ? "Index" : "Stock"} Market Sentiment</span>
             <span className={cn(
               "text-sm font-semibold",
               data.fearGreed.value >= 55 ? "text-green" : data.fearGreed.value <= 45 ? "text-red" : "text-yellow"
