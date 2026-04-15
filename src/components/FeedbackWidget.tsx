@@ -100,19 +100,24 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Floating trigger button */}
-      <button
+      {/* Floating draggable trigger button */}
+      <motion.button
+        drag
+        dragMomentum={false}
+        dragElastic={0.1}
+        whileDrag={{ scale: 1.05 }}
+        onDragEnd={() => { /* stays where dropped */ }}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5",
+          "fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 cursor-grab active:cursor-grabbing",
           "bg-card border border-border text-foreground shadow-lg",
           "hover:bg-accent transition-colors duration-200",
-          "text-sm font-medium"
+          "text-sm font-medium touch-none"
         )}
       >
         <MessageSquare className="h-4 w-4" />
         <span>Give Feedback</span>
-      </button>
+      </motion.button>
 
       {/* Backdrop */}
       <AnimatePresence>

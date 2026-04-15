@@ -1,7 +1,5 @@
 "use client";
 
-import { Activity } from "lucide-react";
-
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -10,11 +8,12 @@ export default function Header() {
       </div>
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-            <Activity className="h-4.5 w-4.5 text-accent" />
+          {/* MA Logo */}
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent shadow-md shadow-accent/25">
+            <span className="text-xs font-black text-white tracking-tight">MA</span>
           </div>
           <div>
-            <h1 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">Market Assist <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-accent">Beta</span></h1>
+            <h1 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">Markets Assist <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-accent">Beta</span></h1>
             <p className="text-[10px] text-muted">Buy vs Sell Pressure — Multi-TF Confluence</p>
           </div>
         </div>
