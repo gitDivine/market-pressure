@@ -74,7 +74,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-bold">Market Assist — Admin Dashboard</h1>
+        <h1 className="text-xl font-bold">Markets Assist — Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Feedback management and analytics
         </p>
