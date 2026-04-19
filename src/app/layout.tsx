@@ -33,13 +33,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
-        {process.env.NEXT_PUBLIC_VERCEL_ENV !== "production" && (
-          <div className="pointer-events-none fixed bottom-4 right-4 z-[999] rounded border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-mono text-white/40 backdrop-blur-sm sm:bottom-6 sm:left-6 sm:right-auto">
-            dev mode
-          </div>
-        )}
         <Analytics />
         <FeedbackWidget />
+        {/* DEV WATERMARK — NEVER merge this to master */}
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center opacity-[0.07]">
+          <div className="h-72 w-72 rounded-full border-[3px] border-white flex items-center justify-center">
+            <span className="text-white text-2xl font-black uppercase tracking-widest -rotate-12">DEV MODE</span>
+          </div>
+        </div>
       </body>
     </html>
   );
