@@ -33,6 +33,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        {process.env.NEXT_PUBLIC_VERCEL_ENV !== "production" && (
+          <div className="pointer-events-none fixed bottom-4 right-4 z-[999] rounded border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-mono text-white/40 backdrop-blur-sm sm:bottom-6 sm:left-6 sm:right-auto">
+            dev mode
+          </div>
+        )}
         <Analytics />
         <FeedbackWidget />
       </body>

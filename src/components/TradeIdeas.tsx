@@ -65,6 +65,12 @@ function TradeIdeas({ pair }: Props) {
   const sym = getExternalSymbol(pair);
   const tvSym = getTradingViewSymbol(pair);
 
+  let ffSym = sym.toLowerCase();
+  if (ffSym === 'xauusd') ffSym = 'goldusd';
+  else if (ffSym === 'xagusd') ffSym = 'silverusd';
+  else if (ffSym === 'xptusd') ffSym = 'platinumusd';
+  else if (ffSym === 'usoil') ffSym = 'wtiusd';
+
   const ideasLinks = [
     {
       name: "TradingView Ideas",
@@ -124,7 +130,7 @@ function TradeIdeas({ pair }: Props) {
         </p>
         <div className="flex flex-col gap-2">
           <a
-            href={`https://www.forexfactory.com/market/${sym.toLowerCase()}`}
+            href={`https://www.forexfactory.com/market/${ffSym}`}
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center justify-between rounded-xl border border-amber-500/30 bg-gradient-to-b from-amber-500/15 to-amber-600/5 p-3 transition-all hover:border-amber-400/50 active:scale-[0.98] sm:p-4"
