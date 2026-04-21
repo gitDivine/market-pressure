@@ -76,3 +76,13 @@ None currently.
 - Fixed routing mappings for specific custom pairs (XAGUSD -> silverusd, XPTUSD -> platinumusd, XAUUSD -> goldusd, USOIL -> wtiusd) for the ForexFactory button.
 - Restored the massive DEV MODE watermark specifically for the `dev` branch.
 - Solidified branching workflow: `dev` for development & `master` for production. Merged latest changes to `master` while explicitly omitting the dev watermark.
+
+### Session 3 — 2026-04-21
+- Attempted to move Strength Meter to an overall timeframe-independent logic using Twelve Data API.
+- Re-evaluated and decided to revert all changes from this session.
+
+### Session 4 — 2026-04-21
+- **Reverted all changes** from Session 3 on the `dev` branch.
+- Restored `dev` environment to match `master` (plus dev-only watermark).
+- Removed Twelve Data API keys from Vercel and local environments.
+- Verified that `dev0xdivine-marketsassist.vercel.app` is back to its original state.
